@@ -1,0 +1,79 @@
+mkdir N
+cd N
+for j in {1..20}
+do
+k=$(echo "$j * 1000" | bc)
+mkdir ind$k
+done
+
+for i in 0.1 0.5 0.9
+do
+mkdir ge$i
+cd ge$i
+for j in {1..15}
+do
+mkdir simulation$j
+done
+mkdir results 
+cd results
+mkdir ge3mb
+cd ge3mb
+for j in {1..15}
+do
+mkdir simulation$j
+done
+cd ..
+mkdir gi3mb
+cd gi3mb
+for j in {1..15}
+do
+mkdir simulation$j
+done
+cd ../../..
+mkdir h1$i
+cd h1$i
+for j in {1..15}
+do
+mkdir simulation$j
+done
+mkdir results 
+cd results
+mkdir ge3mb
+cd ge3mb
+for j in {1..15}
+do
+mkdir simulation$j
+done
+cd ..
+mkdir gi3mb
+cd gi3mb
+for j in {1..15}
+do
+mkdir simulation$j
+done
+cd ../../..
+done
+
+
+mkdir h1h2
+cd h1h2
+for j in {1..15}
+do
+mkdir simulation$j
+done
+mkdir results 
+cd results
+mkdir ge3mb
+cd ge3mb
+for j in {1..15}
+do
+mkdir simulation$j
+done
+cd ..
+mkdir gi3mb
+cd gi3mb
+for j in {1..15}
+do
+mkdir simulation$j
+done
+cd ../../..

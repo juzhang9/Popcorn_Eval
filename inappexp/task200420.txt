@@ -1,0 +1,35 @@
+#!/bin/bash
+#SBATCH -o test.o%j
+#SBATCH --time=2:00:00
+#SBATCH --mem=20gb
+#SBATCH --mail-user=jxz617@case.edu
+#SBATCH --mail-type=end
+#SBATCH --array=1-43
+
+set -i
+
+
+echo "SLURM_JOBID: " $SLURM_JOBID
+echo "SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+echo "SLURM_ARRAY_JOB_ID: " $SLURM_ARRAY_JOB_ID
+
+module load gcc/6.3.0
+module load openmpi/2.0.1
+module load python2
+export PYTHONUSERBASE=$HOME/local/python/2.7.13
+
+
+j=$3
+cd /mnt/rstor/SOM_EPBI_FRS2/jxz617/simulationEUREAS8/simulation$j
+
+i=${SLURM_ARRAY_TASK_ID}
+
+
+
+python /home/jxz617/src/Popcorn/popcorn/Popcorn/popcorn/__main__.py fit -v 1 --cfile /mnt/rstor/SOM_EPBI_FRS2/jxz617/simulationEURYRI/scores3mbGE.txt --gen_effect --sfile1 $1summarystat$i --sfile2 $2summarystat$i ../inappexp/EUEAEUYR/ge3mb/simulation$j/$1_$2_corr$i
+
+python /home/jxz617/src/Popcorn/popcorn/Popcorn/popcorn/__main__.py fit -v 1 --cfile /mnt/rstor/SOM_EPBI_FRS2/jxz617/simulationEURYRI/scores3mbGI.txt --sfile1 $1summarystat$i --sfile2 $2summarystat$i ../inappexp/EUEAEUYR/gi3mb/simulation$j/$1_$2_corr$i
+
+python /home/jxz617/src/Popcorn/popcorn/Popcorn/popcorn/__main__.py fit -v 1 --cfile /mnt/rstor/SOM_EPBI_FRS2/jxz617/simulationEASYRI/scores3mbGE.txt --gen_effect --sfile1 $2summarystat$i --sfile2 $1summarystat$i ../inappexp/EAEUEAYR/ge3mb/simulation$j/$2_$1_corr$i
+
+python /home/jxz617/src/Popcorn/popcorn/Popcorn/popcorn/__main__.py fit -v 1 --cfile /mnt/rstor/SOM_EPBI_FRS2/jxz617/simulationEASYRI/scores3mbGI.txt --sfile1 $2summarystat$i --sfile2 $1summarystat$i ../inappexp/EAEUEAYR/gi3mb/simulation$j/$2_$1_corr$i

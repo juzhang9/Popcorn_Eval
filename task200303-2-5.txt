@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH -o test.o%j
+#SBATCH --time=4:00:00
+#SBATCH --mem=64gb
+#SBATCH --mail-user=jxz617@case.edu
+#SBATCH --mail-type=end
+#SBATCH --dependency=afterok:14477509
+
+set -e
+
+j=$1
+cd simulation$j
+
+gcta64 --bfile ../EUR_PostFilter --simu-causal-loci EURcausalSNPlist33.txt --simu-qt --simu-hsq 0.5 --out EURpheno33
+gcta64 --bfile ../EAS_PostFilter --simu-causal-loci EAScausalSNPlist33.txt --simu-qt --simu-hsq 0.0000001 --out EASpheno33

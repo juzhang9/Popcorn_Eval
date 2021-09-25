@@ -1,0 +1,46 @@
+#!/bin/bash
+#SBATCH -o test.o%j
+#SBATCH --time=2:00:00
+#SBATCH --mem=20gb
+#SBATCH --mail-user=jxz617@case.edu
+#SBATCH --mail-type=end
+#SBATCH --array=1-43
+
+set -i
+
+
+echo "SLURM_JOBID: " $SLURM_JOBID
+echo "SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+echo "SLURM_ARRAY_JOB_ID: " $SLURM_ARRAY_JOB_ID
+
+module load gcc/6.3.0
+module load openmpi/2.0.1
+module load python2
+export PYTHONUSERBASE=$HOME/local/python/2.7.13
+
+
+j=$1
+cd simulation$j
+
+i=${SLURM_ARRAY_TASK_ID}
+
+
+plink --bfile ../EUR_PostFilter --pheno EURpheno$i.phen --allow-no-sex --extract ../finalsnps.txt --standard-beta --linear --ci 0.95 --out EURlinear$i 
+plink --bfile ../EAS_PostFilter --reference-allele ../refalleles.txt --pheno EASpheno$i.phen --allow-no-sex --extract ../finalsnps.txt --standard-beta --linear --ci 0.95 --out EASlinear$i 
+
+awk '{print $6"\t"$7"\t"$8}' EURlinear$i.assoc.linear | sed '1d' > EURfivetoseven$i
+paste ../EUR_onetofour.txt EURfivetoseven$i > EURall$i
+
+awk '{print $1"\t"$2"\t"$3"\t"1-$4"\t"$5"\t"$6"\t"$7}' EURall$i > EURsummarystat$i
+
+sed -i '1i rsid\ta1\ta2\taf\tN\tbeta\tSE' EURsummarystat$i
+awk '{print $6"\t"$7"\t"$8}' EASlinear$i.assoc.linear | sed '1d' > EASfivetoseven$i
+paste ../EAS_onetofour.txt EASfivetoseven$i > EASall$i
+
+awk '{print $1"\t"$2"\t"$3"\t"1-$4"\t"$5"\t"$6"\t"$7}' EASall$i > EASsummarystat$i
+
+sed -i '1i rsid\ta1\ta2\taf\tN\tbeta\tSE' EASsummarystat$i
+
+python /home/jxz617/src/Popcorn/popcorn/Popcorn/popcorn/__main__.py fit -v 1 --cfile ../scores3mbGE.txt --gen_effect --sfile1 EURsummarystat$i --sfile2 EASsummarystat$i ../results/ge3mb/simulation$j/EUR_EAS_corr$i
+
+python /home/jxz617/src/Popcorn/popcorn/Popcorn/popcorn/__main__.py fit -v 1 --cfile ../scores3mbGI.txt --sfile1 EURsummarystat$i --sfile2 EASsummarystat$i ../results/gi3mb/simulation$j/EUR_EAS_corr$i

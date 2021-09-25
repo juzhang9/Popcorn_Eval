@@ -1,0 +1,42 @@
+#!/bin/bash
+#SBATCH -o test.o%j
+#SBATCH --time=04:00:00
+#SBATCH --mem=64gb
+#SBATCH --mail-user=jxz617@case.edu
+#SBATCH --mail-type=end
+
+set -e
+
+{
+for i in $(eval echo {2..${11}})
+do
+echo $1'_PostFilter_'$i'.ped' $1'_PostFilter_'$i'.map'
+done
+} > $1_mergelist1.txt
+
+#printf "%s\n" " " "Merge list generated." " "
+plink --file $1_PostFilter_1 --merge-list $1_mergelist1.txt --geno 0.1 --maf $5 --make-bed --out $1_PostFilter
+#printf "%s\n" " " "Merge completed." " "
+plink --bfile $1_PostFilter --indep-pairwise 50 5 0.1 --out $1Prune 
+#printf "%s\n" " " "Pruning completed." " "
+plink --bfile $1_PostFilter --extract $1Prune.prune.in --genome --min $6 --out $1Pruned
+printf "%s\n" " " "Relatedness calculation completed." " "
+awk '{print $1$2}' $1Pruned.genome > $1_ind12.txt &
+awk '{print $3$4}' $1Pruned.genome > $1_ind34.txt &
+wait
+printf "%s\n" " " "Individuals split completed." " "
+
+module load openmpi/2.0.1
+module load gcc/6.3.0
+module load R
+
+Rscript /mnt/rstor/SOM_EPBI_FRS2/jxz617/PopMod/1.R $1
+printf "%s\n" " " "Remove individual list completed." " "
+plink --bfile $1_PostFilter --remove $1_rmInd.txt --recode --out $1_PostFilter
+printf "%s\n" " " "Postfilter file completed." " "
+awk '{print $1"\t"$2}' $1_PostFilter.ped > $1_ind.txt
+shuf -n $3 $1_ind.txt > $1_panelInd.txt
+printf "%s\n" " " "Reference panel individual set." " "
+plink --file $1_PostFilter --keep $1_panelInd.txt --make-bed --out $1_panel$3
+printf "%s\n" " " "Reference panel completed." " "
+
